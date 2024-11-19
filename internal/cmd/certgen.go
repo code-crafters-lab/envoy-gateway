@@ -9,7 +9,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,24 +30,28 @@ const defaultLocalCertPath = "/tmp/envoy-gateway/certs"
 
 // getCertGenCommand returns the certGen cobra command to be executed.
 func getCertGenCommand() *cobra.Command {
-	var local bool
+	var (
+		local         bool
+		localCertPath string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "certgen",
 		Short: "Generate Control Plane Certificates",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return certGen(local)
+			return certGen(local, localCertPath)
 		},
 	}
 
 	cmd.PersistentFlags().BoolVarP(&local, "local", "l", false,
 		"Generate all the certificates locally.")
+	cmd.Flags().StringVarP(&localCertPath, "local-cert-path", "p", "", "Path to store the local generated certificates.")
 
 	return cmd
 }
 
 // certGen generates control plane certificates.
-func certGen(local bool) error {
+func certGen(local bool, certPath string) error {
 	cfg, err := getConfig()
 	if err != nil {
 		return err
@@ -68,13 +74,32 @@ func certGen(local bool) error {
 			return fmt.Errorf("failed to output certificates: %w", err)
 		}
 	} else {
-		log.Info("generated certificates", "path", defaultLocalCertPath)
-		if err = outputCertsForLocal(defaultLocalCertPath, certs); err != nil {
+		certPath, err := getLocalCertPath(certPath)
+		if err != nil {
+			return fmt.Errorf("failed to get local cert path: %w", err)
+		}
+		log.Info("generated certificates", "path", certPath)
+		if err = outputCertsForLocal(certPath, certs); err != nil {
 			return fmt.Errorf("failed to output certificates locally: %w", err)
 		}
 	}
 
 	return nil
+}
+
+func getLocalCertPath(path string) (string, error) {
+	if path == "" {
+		return defaultLocalCertPath, nil
+	}
+	if !filepath.IsAbs(path) {
+		exePath, err := os.Executable()
+		if err != nil {
+			return "", err
+		}
+		dir := filepath.Dir(exePath)
+		return filepath.Join(dir, path), nil
+	}
+	return path, nil
 }
 
 // outputCertsForKubernetes outputs the provided certs to a secret in namespace ns.
