@@ -55,3 +55,10 @@ func LoadTLSConfig(tlsCrt, tlsKey, caCrt string) (*tls.Config, error) {
 		},
 	}, nil
 }
+
+func LoadHostTLSConfig(certType CertType, homeDir string) (*tls.Config, error) {
+	return LoadTLSConfig(
+		certType.TLSCertFilePath(homeDir),
+		certType.TLSKeyFilepath(homeDir),
+		certType.TLSCaFilePath(homeDir))
+}
