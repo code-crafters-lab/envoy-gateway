@@ -10,6 +10,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -120,6 +121,42 @@ func TestGetParentDirs(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			parents := GetParentDirs(tc.paths)
 			require.ElementsMatch(t, parents.UnsortedList(), tc.expectParentDirs)
+		})
+	}
+}
+
+func TestGetAbsPath(t *testing.T) {
+	exePath, err := os.Getwd()
+	assert.Nil(t, err)
+	assert.NotNil(t, exePath)
+
+	testCases := []struct {
+		name     string
+		path     string
+		expected string
+	}{
+		{
+			name:     "use default path",
+			path:     "",
+			expected: "/tmp/envoy-gateway/certs",
+		},
+		{
+			name:     "relative path",
+			path:     "foo/bar",
+			expected: path.Join(exePath, "foo/bar"),
+		},
+		{
+			name:     "absolute path",
+			path:     "/foo/bar",
+			expected: "/foo/bar",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p, err := GetAbsPath(tc.path, "/tmp/envoy-gateway/certs")
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expected, p)
 		})
 	}
 }
