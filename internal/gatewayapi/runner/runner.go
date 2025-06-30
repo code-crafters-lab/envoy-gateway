@@ -42,15 +42,8 @@ const (
 	serveTLSKeyFilepath  = "/certs/tls.key"
 	serveTLSCaFilepath   = "/certs/ca.crt"
 
-	// TODO: Make these path configurable.
-	// Default certificates path for envoy-gateway with Host infrastructure provider.
-	localTLSCertFilepath = "/tmp/envoy-gateway/certs/envoy-gateway/tls.crt"
-	localTLSKeyFilepath  = "/tmp/envoy-gateway/certs/envoy-gateway/tls.key"
-	localTLSCaFilepath   = "/tmp/envoy-gateway/certs/envoy-gateway/ca.crt"
-
 	hmacSecretName = "envoy-oidc-hmac" // nolint: gosec
 	hmacSecretKey  = "hmac-secret"
-	hmacSecretPath = "/tmp/envoy-gateway/certs/envoy-oidc-hmac/hmac-secret" // nolint: gosec
 )
 
 type Config struct {
@@ -375,12 +368,14 @@ func (r *Runner) loadTLSConfig(ctx context.Context) (tlsConfig *tls.Config, salt
 		}
 
 	case r.EnvoyGateway.Provider.IsRunningOnHost():
+		homeDir := r.EnvoyGateway.Provider.GetHostHomeDir()
+		hmacSecretPath := crypto.CertEnvoyOidcHmac.HmacSecretPath(homeDir)
 		salt, err = os.ReadFile(hmacSecretPath)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get hmac secret: %w", err)
 		}
 
-		tlsConfig, err = crypto.LoadTLSConfig(localTLSCertFilepath, localTLSKeyFilepath, localTLSCaFilepath)
+		tlsConfig, err = crypto.LoadHostTLSConfig(crypto.CertEnvoyGateway, homeDir)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create tls config: %w", err)
 		}
