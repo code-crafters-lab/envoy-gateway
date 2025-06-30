@@ -430,7 +430,8 @@ type EnvoyGatewayInfrastructureProvider struct {
 
 // EnvoyGatewayHostInfrastructureProvider defines configuration for the Host Infrastructure provider.
 type EnvoyGatewayHostInfrastructureProvider struct {
-	// TODO: Add config as use cases are better understood.
+	// HomeDir is the default home directory for the Envoy Gateway.
+	HomeDir string `json:"homeDir,omitempty"`
 }
 
 // RateLimit defines the configuration associated with the Rate Limit Service
