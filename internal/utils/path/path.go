@@ -65,3 +65,16 @@ func GetParentDirs(files []string) sets.Set[string] {
 	}
 	return parents
 }
+
+// GetAbsPath returns the absolute path of given path.
+// If path is empty, return defaultPath.
+func GetAbsPath(path string, defaultPath string) (string, error) {
+	if path == "" {
+		return defaultPath, nil
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	return abs, nil
+}
