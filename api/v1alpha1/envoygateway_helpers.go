@@ -6,6 +6,7 @@
 package v1alpha1
 
 import (
+	"github.com/envoyproxy/gateway/internal/utils/path"
 	"net"
 	"strconv"
 
@@ -330,6 +331,18 @@ func (r *EnvoyGatewayProvider) IsRunningOnHost() bool {
 	return r.Type == ProviderTypeCustom &&
 		r.Custom.Infrastructure != nil &&
 		r.Custom.Infrastructure.Type == InfrastructureProviderTypeHost
+}
+
+func (r *EnvoyGatewayProvider) GetHostHomeDir(defaultHomeDir ...string) string {
+	if r.IsRunningOnHost() {
+		def := "/tmp/envoy-gateway"
+		if len(defaultHomeDir) > 0 && defaultHomeDir[0] != "" {
+			def = defaultHomeDir[0]
+		}
+		homeDir, _ := path.GetAbsPath(r.Custom.Infrastructure.Host.HomeDir, def)
+		return homeDir
+	}
+	return ""
 }
 
 // DefaultEnvoyGatewayLoggingLevel returns a new EnvoyGatewayLogging with default configuration parameters.
