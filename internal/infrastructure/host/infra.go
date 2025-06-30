@@ -8,6 +8,7 @@ package host
 import (
 	"context"
 	"fmt"
+	"github.com/envoyproxy/gateway/internal/crypto"
 	"os"
 	"path/filepath"
 
@@ -51,27 +52,30 @@ type Infra struct {
 }
 
 func NewInfra(runnerCtx context.Context, cfg *config.Server, logger logging.Logger) (*Infra, error) {
+	homeDir := cfg.EnvoyGateway.Provider.GetHostHomeDir()
 	// Ensure the home directory exist.
-	if err := os.MkdirAll(defaultHomeDir, 0o750); err != nil {
+	if err := os.MkdirAll(homeDir, 0o750); err != nil {
 		return nil, fmt.Errorf("failed to create dir: %w", err)
 	}
 
+	localCertPathDir := crypto.CertEnvoy.DirPath(homeDir, crypto.CertBaseDir)
+
 	// Check local certificates dir exist.
-	if _, err := os.Lstat(defaultLocalCertPathDir); err != nil {
+	if _, err := os.Lstat(localCertPathDir); err != nil {
 		return nil, fmt.Errorf("failed to stat dir: %w", err)
 	}
 
 	// Ensure the sds config exist.
-	if err := createSdsConfig(defaultLocalCertPathDir); err != nil {
+	if err := createSdsConfig(localCertPathDir); err != nil {
 		return nil, fmt.Errorf("failed to create sds config: %w", err)
 	}
 
 	infra := &Infra{
-		HomeDir:         defaultHomeDir,
+		HomeDir:         homeDir,
 		Logger:          logger,
 		EnvoyGateway:    cfg.EnvoyGateway,
 		proxyContextMap: make(map[string]*proxyContext),
-		sdsConfigPath:   defaultLocalCertPathDir,
+		sdsConfigPath:   localCertPathDir,
 	}
 	return infra, nil
 }
