@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	utilspath "github.com/envoyproxy/gateway/internal/utils/path"
 	"io"
 	"path"
 
@@ -32,7 +33,6 @@ var overwriteControlPlaneCerts bool
 
 var disableTopologyInjector bool
 
-// TODO: make this path configurable or use server config directly.
 const (
 	defaultLocalCertPath      = "/tmp/envoy-gateway/certs"
 	topologyWebhookNamePrefix = "envoy-gateway-topology-injector"
@@ -40,27 +40,33 @@ const (
 
 // GetCertGenCommand returns the certGen cobra command to be executed.
 func GetCertGenCommand() *cobra.Command {
-	var local bool
+	var (
+		local         bool
+		localCertPath string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "certgen",
 		Short: "Generate Control Plane Certificates",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return certGen(cmd.Context(), cmd.OutOrStdout(), local)
+			return certGen(cmd.Context(), cmd.OutOrStdout(), local, localCertPath)
 		},
 	}
 
 	cmd.PersistentFlags().BoolVarP(&local, "local", "l", false,
 		"Generate all the certificates locally.")
+	cmd.Flags().StringVarP(&localCertPath, "local-cert-path", "p", "",
+		"Path to store the local generated certificates.")
 	cmd.PersistentFlags().BoolVarP(&overwriteControlPlaneCerts, "overwrite", "o", false,
 		"Updates the secrets containing the control plane certs.")
 	cmd.PersistentFlags().BoolVar(&disableTopologyInjector, "disable-topology-injector", false,
 		"Disables patching caBundle for injector MutatingWebhookConfiguration.")
+
 	return cmd
 }
 
 // certGen generates control plane certificates.
-func certGen(ctx context.Context, logOut io.Writer, local bool) error {
+func certGen(ctx context.Context, logOut io.Writer, local bool, certPath string) error {
 	cfg, err := config.New(logOut)
 	if err != nil {
 		return err
@@ -86,8 +92,12 @@ func certGen(ctx context.Context, logOut io.Writer, local bool) error {
 			return fmt.Errorf("failed to patch webhook: %w", err)
 		}
 	} else {
-		log.Info("generated certificates", "path", defaultLocalCertPath)
-		if err = outputCertsForLocal(defaultLocalCertPath, certs); err != nil {
+		absCertPath, err := utilspath.GetAbsPath(certPath, defaultLocalCertPath)
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path for local certificate path: %w", err)
+		}
+		log.Info("generated certificates", "path", absCertPath)
+		if err = outputCertsForLocal(absCertPath, certs); err != nil {
 			return fmt.Errorf("failed to output certificates locally: %w", err)
 		}
 	}
