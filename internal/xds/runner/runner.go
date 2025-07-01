@@ -55,11 +55,6 @@ const (
 	// xDS server trusted CA certificate.
 	xdsTLSCaFilepath = "/certs/ca.crt"
 
-	// TODO: Make these path configurable.
-	// Default certificates path for envoy-gateway with Host infrastructure provider.
-	localTLSCertFilepath = "/tmp/envoy-gateway/certs/envoy-gateway/tls.crt"
-	localTLSKeyFilepath  = "/tmp/envoy-gateway/certs/envoy-gateway/tls.key"
-	localTLSCaFilepath   = "/tmp/envoy-gateway/certs/envoy-gateway/ca.crt"
 	// defaultKubernetesIssuer is the default issuer URL for Kubernetes.
 	// This is used for validating Service Account JWT tokens.
 	defaultKubernetesIssuer = "https://kubernetes.default.svc.cluster.local"
