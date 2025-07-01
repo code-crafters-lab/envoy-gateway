@@ -51,11 +51,6 @@ const (
 	// xDS server trusted CA certificate.
 	xdsTLSCaFilepath = "/certs/ca.crt"
 
-	// TODO: Make these path configurable.
-	// Default certificates path for envoy-gateway with Host infrastructure provider.
-	localTLSCertFilepath = "/tmp/envoy-gateway/certs/envoy-gateway/tls.crt"
-	localTLSKeyFilepath  = "/tmp/envoy-gateway/certs/envoy-gateway/tls.key"
-	localTLSCaFilepath   = "/tmp/envoy-gateway/certs/envoy-gateway/ca.crt"
 	// defaultKubernetesIssuer is the default issuer URL for Kubernetes.
 	// This is used for validating Service Account JWT tokens.
 	defaultKubernetesIssuer = "https://kubernetes.default.svc.cluster.local"
@@ -224,7 +219,8 @@ func (r *Runner) loadTLSConfig() (tlsConfig *tls.Config, err error) {
 		}
 
 	case r.EnvoyGateway.Provider.IsRunningOnHost():
-		tlsConfig, err = crypto.LoadTLSConfig(localTLSCertFilepath, localTLSKeyFilepath, localTLSCaFilepath)
+		homeDir := r.EnvoyGateway.Provider.GetHostHomeDir()
+		tlsConfig, err = crypto.LoadHostTLSConfig(crypto.CertEnvoyGateway, homeDir)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create tls config: %w", err)
 		}
