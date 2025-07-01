@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"github.com/envoyproxy/gateway/internal/infrastructure/common"
 	"path/filepath"
 )
 
@@ -71,5 +72,18 @@ func (c CertType) HmacSecretPath(homeDir string) string {
 		return c.FilePath(HmacSecretFilename, homeDir, CertBaseDir)
 	}
 	return ""
+}
 
+func (c CertType) SdsCertFilename(homeDir string) string {
+	if c == CertEnvoy {
+		return c.FilePath(common.SdsCertFilename, homeDir, CertBaseDir)
+	}
+	return ""
+}
+
+func (c CertType) SdsCAFilename(homeDir string) string {
+	if c == CertEnvoy {
+		return c.FilePath(common.SdsCAFilename, homeDir, CertBaseDir)
+	}
+	return ""
 }
