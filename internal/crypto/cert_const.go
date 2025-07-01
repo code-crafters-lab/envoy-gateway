@@ -24,7 +24,7 @@ const (
 type CertType int
 
 func (c CertType) DirPath(baseDir ...string) string {
-	return filepath.Join(baseDir...)
+	return filepath.Join(append(baseDir, c.String())...)
 }
 
 func (c CertType) FilePath(filename string, baseDir ...string) string {
