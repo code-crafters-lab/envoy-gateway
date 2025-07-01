@@ -20,10 +20,6 @@ import (
 )
 
 const (
-	// TODO: Make these path configurable.
-	defaultHomeDir          = "/tmp/envoy-gateway"
-	defaultLocalCertPathDir = "/tmp/envoy-gateway/certs/envoy"
-
 	// XdsTLSCertFilename is the fully qualified name of the file containing Envoy's
 	// xDS server TLS certificate.
 	XdsTLSCertFilename = "tls.crt"
@@ -47,7 +43,6 @@ type Infra struct {
 	// proxyContextMap store the context of each running proxy by its name for lifecycle management.
 	proxyContextMap map[string]*proxyContext
 
-	// TODO: remove this field once it supports the configurable homeDir
 	sdsConfigPath string
 }
 
