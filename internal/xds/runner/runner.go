@@ -316,9 +316,11 @@ func (r *Runner) loadTLSConfig() (tlsConfig *tls.Config, err error) {
 			keyPath = xdsTLSKeyFilepath
 			caPath = xdsTLSCaFilepath
 		case r.EnvoyGateway.Provider.IsRunningOnHost():
-			certPath = localTLSCertFilepath
-			keyPath = localTLSKeyFilepath
-			caPath = localTLSCaFilepath
+			homeDir := r.EnvoyGateway.Provider.GetHostHomeDir()
+			certType := crypto.CertEnvoyGateway
+			certPath = certType.TLSCertFilePath(homeDir)
+			keyPath = certType.TLSKeyFilepath(homeDir)
+			caPath = certType.TLSCaFilePath(homeDir)
 		default:
 			return nil, fmt.Errorf("no valid tls certificates")
 		}
