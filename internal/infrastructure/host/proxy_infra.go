@@ -81,7 +81,7 @@ func (i *Infra) CreateOrUpdateProxyInfra(ctx context.Context, infra *ir.Infra) e
 			TrustedCA:   filepath.Join(i.sdsConfigPath, common.SdsCAFilename),
 		},
 		XdsServerHost:   ptr.To("0.0.0.0"),
-		AdminServerPort: ptr.To(int32(0)),
+		AdminServerPort: ptr.To(int32(19001)), // todo envoy 原生后台管理的接口需要提供访问能力
 		StatsServerPort: ptr.To(int32(0)),
 		// Always disable the topology injector in standalone mode. The topology
 		// injector adds an EDS local_cluster to the bootstrap config for
