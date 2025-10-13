@@ -24,6 +24,7 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -49,11 +50,11 @@ func main() {
 	users := testUsers
 
 	// Load TLS credentials
-	creds, err := loadTLSCredentials(certPath)
+	//creds, err := loadTLSCredentials(certPath)
 	if err != nil {
 		log.Fatalf("Failed to load TLS credentials: %v", err)
 	}
-	gs := grpc.NewServer(grpc.Creds(creds))
+	gs := grpc.NewServer()
 
 	envoy_service_auth_v3.RegisterAuthorizationServer(gs, NewAuthServer(users))
 
@@ -88,12 +89,15 @@ func NewAuthServer(users Users) envoy_service_auth_v3.AuthorizationServer {
 
 // Check implements authorization's Check interface which performs authorization check based on the
 // attributes associated with the incoming request.
-func (s *authServer) Check(
-	_ context.Context,
-	req *envoy_service_auth_v3.CheckRequest,
-) (*envoy_service_auth_v3.CheckResponse, error) {
+func (s *authServer) Check(ctx context.Context, req *envoy_service_auth_v3.CheckRequest) (*envoy_service_auth_v3.CheckResponse, error) {
+	// 1. 读取 gRPC Metadata（即 Envoy 注入的原始请求信息）
 	authorization := req.Attributes.Request.Http.Headers["authorization"]
-	log.Println("GRPC check auth: ", authorization)
+	log.Println("GRPC check auth 1: ", authorization)
+	md, _ := metadata.FromIncomingContext(ctx)
+	targetCluster := md.Get("x-target-cluster")
+	log.Println("GRPC check auth 2: ", targetCluster)
+	targetService := md.Get("x-target-service")
+	log.Println("GRPC check auth 3: ", targetService)
 
 	extracted := strings.Fields(authorization)
 	if len(extracted) == 2 && extracted[0] == "Bearer" {
